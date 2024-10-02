@@ -42,7 +42,7 @@ public class AuthorizationCookieFilter extends AbstractGatewayFilterFactory<Auth
         return (exchange, chain) -> {
             //쿠키에서 액세스 토큰 가져오기
             String accessToken = "";
-            HttpCookie accessTokenCookie = exchange.getRequest().getCookies().getFirst("accessToken");
+            HttpCookie accessTokenCookie = exchange.getRequest().getCookies().getFirst("AccessToken");
             if (accessTokenCookie == null) {
                 return onError(exchange, "Token does not exist.", HttpStatus.UNAUTHORIZED, "Token not authorization");
             }
