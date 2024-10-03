@@ -26,6 +26,7 @@ public class AuthApi {
 
     @PostMapping("/reissue")
     public ResponseEntity<?> postToken(@RequestBody RequestIssueDto requestIssueDto, HttpServletResponse httpServletResponse) throws IOException {
+        log.info("토큰 재발급 요청이 왔습니다.");
         Cookie cookie = userServiceImpl.issueToken(requestIssueDto);
 
         httpServletResponse.addCookie(cookie);

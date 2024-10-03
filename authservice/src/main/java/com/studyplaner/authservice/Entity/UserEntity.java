@@ -21,7 +21,7 @@ public class UserEntity {
     @Column(length = 20, nullable = false)
     private String userId;
 
-    @Column(length = 20, nullable = false)
+    @Column(nullable = false)
     private String password;
 
 //    @Temporal(TemporalType.TIMESTAMP)

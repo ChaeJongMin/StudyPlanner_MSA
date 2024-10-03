@@ -2,6 +2,7 @@ package com.studyplaner.authservice.Auth;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studyplaner.authservice.Dto.RequestIssueDto;
 import com.studyplaner.authservice.Error.CustomTokenException;
 import com.studyplaner.authservice.service.*;
 import jakarta.servlet.FilterChain;
@@ -32,29 +33,19 @@ public class IssueAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-
+        log.info("doFilterInternal 작동");
         //올바른 유저인지 재확인
         if ("POST".equalsIgnoreCase(request.getMethod()) && request.getContentType().contains("application/json")) {
             ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> jsonMap = objectMapper.readValue(request.getInputStream(), new TypeReference<Map<String, Object>>() {});
-            String userId = (String) jsonMap.get("userId");
+            RequestIssueDto jsonMap = objectMapper.readValue(request.getInputStream(), RequestIssueDto.class);
+            String userId = jsonMap.getUserId();
 
-            // SecurityContextHolder에서 인증 정보 가져오기
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-//            // 인증 여부 확인
-//            if (authentication != null && authentication.isAuthenticated()) {
-//                if (!userId.equals(authentication.getName())) {
-//                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User ID does not match");
-//                    return;
-//                }
-//            } else {
-//                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User authentication failed");
-//                return;
-//            }
             UserDetails userDetails = userServiceImpl.loadUserByUsername(userId);
             try{
                 long refreshTokedValidationResult = redisUtil.getDataExpire(userId);
+                if(tokenUtil.isTokenExpired(redisUtil.getData(userId))){
+                    log.info("리프레쉬 토큰은 만료되었습니다.!");
+                }
                 if(refreshTokedValidationResult <= 0 || !tokenUtil.validateToken(redisUtil.getData(userId),userDetails)){
                     throw new CustomTokenException("RefreshToken not valid", "RefreshToken_Error");
                 }
@@ -71,7 +62,7 @@ public class IssueAuthenticationFilter extends OncePerRequestFilter {
                 response.getWriter().flush();
             }
         }
-
+        log.info("doFilterInternal 끝");
         // 필터 체인의 다음 필터 호출
         filterChain.doFilter(request, response);
     }
@@ -79,6 +70,8 @@ public class IssueAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String requestURI = request.getRequestURI();
-        return requestURI.equals("/login") || requestURI.equals("/logout");
+        log.info("받아온 URI : "+requestURI);
+
+        return requestURI.equals("/login") || requestURI.equals("/logout") || requestURI.equals("/users");
     }
 }

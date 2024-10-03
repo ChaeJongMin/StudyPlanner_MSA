@@ -7,6 +7,7 @@ import com.studyplaner.authservice.Entity.UserEntity;
 import com.studyplaner.authservice.Repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService{
 
     private final UserRepository userRepository;
@@ -36,8 +38,6 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public Cookie issueToken(RequestIssueDto requestIssueDto) {
-        boolean tokenKind = requestIssueDto.isTokenKind();
-
         String accessToken = tokenUtil.doGenerateToken(requestIssueDto.getUserId(),TokenUtil.TOKEN_VALIDATION_SECOND);
 
         return cookieUtil.createCookie(TokenUtil.ACCESS_TOKEN,accessToken);
@@ -46,10 +46,10 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
 
-        UserDto userDto =userRepository.findByUserId(userId)
+        UserEntity userEntity =userRepository.findByUserId(userId)
                 .orElseThrow(()-> new UsernameNotFoundException("해당 유저는 없습니다."));
-
-        return new User(userDto.getUserId(), userDto.getPassword(), true, true, true, true,
+        log.info("가져온 userEntity : "+userEntity.getUserId()+" "+userEntity.getPassword());
+        return new User(userEntity.getUserId(), userEntity.getPassword(), true, true, true, true,
                 new ArrayList<>());
     }
 

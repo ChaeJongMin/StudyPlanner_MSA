@@ -5,6 +5,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
+@Slf4j
 public class TokenUtil {
 
     final static public String ACCESS_TOKEN_NAME = "accessToken";
@@ -53,17 +55,14 @@ public class TokenUtil {
     }
 
     public String doGenerateToken(String userId, long expireTime) {
-
         Claims claims = Jwts.claims();
         claims.put("userId", userId);
         Key key = getSignKey(SECRET_KEY);
 
         return Jwts.builder()
                 .addClaims(claims)
-                .setExpiration(
-                        new Date(System.currentTimeMillis() + expireTime)
-                )
-                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expireTime))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
@@ -75,7 +74,6 @@ public class TokenUtil {
 
     public Boolean validateToken(String token, UserDetails userDetails){
         final String username = getUsername(token);
-
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return !isTokenExpired(token) && username.equals(userDetails.getUsername());
     }
 }

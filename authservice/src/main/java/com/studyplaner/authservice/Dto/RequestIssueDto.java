@@ -7,5 +7,4 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RequestIssueDto {
     private String userId;
-    private boolean tokenKind;
 }

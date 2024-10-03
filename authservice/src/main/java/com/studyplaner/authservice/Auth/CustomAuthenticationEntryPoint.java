@@ -32,10 +32,11 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         if (authException instanceof BadCredentialsException) {
             errorMessage = "Invalid username or password.";
         } else {
+            log.info(authException.toString());
             errorMessage = "Authentication failed.";
         }
 
-        String json= responseTokenUtil.sendResponse(response,HttpServletResponse.SC_UNAUTHORIZED,"AccessToken","Access token issued");
+        String json= responseTokenUtil.sendResponse(response,HttpServletResponse.SC_UNAUTHORIZED,"Authentication Failed",errorMessage);
         response.getWriter().write(json);
         response.getWriter().flush();
 
