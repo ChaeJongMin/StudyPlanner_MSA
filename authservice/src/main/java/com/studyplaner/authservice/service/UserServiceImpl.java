@@ -4,6 +4,7 @@ import com.studyplaner.authservice.Dto.RequestIssueDto;
 import com.studyplaner.authservice.Dto.RequestJoinUserDto;
 import com.studyplaner.authservice.Dto.UserDto;
 import com.studyplaner.authservice.Entity.UserEntity;
+import com.studyplaner.authservice.Error.CustomTokenException;
 import com.studyplaner.authservice.Repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class UserServiceImpl implements UserService{
     private final UserRepository userRepository;
     private final TokenUtil tokenUtil;
     private final CookieUtil cookieUtil;
-
+    private final RedisUtil redisUtil;
     @Override
     public Long save(RequestJoinUserDto requestJoinUserDto) {
         UserEntity userEntity = userRepository.save(requestJoinUserDto.toUserEntity());
@@ -38,7 +39,30 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public Cookie issueToken(RequestIssueDto requestIssueDto) {
-        String accessToken = tokenUtil.doGenerateToken(requestIssueDto.getUserId(),TokenUtil.TOKEN_VALIDATION_SECOND);
+        String userId = requestIssueDto.getUserId();
+        try{
+            boolean isExistUserId = userRepository.existsByUserId(userId);
+
+            long refreshTokedValidationResult = redisUtil.getDataExpire(userId);
+
+            if(!isExistUserId){
+                throw new UsernameNotFoundException("해당 유저는 없습니다.");
+            }
+
+            if(refreshTokedValidationResult <= 0 || !tokenUtil.validateToken(redisUtil.getData(userId))){
+                throw new CustomTokenException("RefreshToken not valid", "RefreshToken_Error");
+            }
+
+            //특정시간 이하면 리프레쉬 토큰을 다시 재발급
+            if(refreshTokedValidationResult <= 3600){
+                String refreshToken = tokenUtil.doGenerateToken(userId,TokenUtil.REFRESH_TOKEN_VALIDATION_SECOND);
+                redisUtil.setDataExpire(userId, refreshToken,TokenUtil.REFRESH_TOKEN_VALIDATION_SECOND);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        String accessToken = tokenUtil.doGenerateToken(userId,TokenUtil.TOKEN_VALIDATION_SECOND);
 
         return cookieUtil.createCookie(TokenUtil.ACCESS_TOKEN,accessToken);
     }

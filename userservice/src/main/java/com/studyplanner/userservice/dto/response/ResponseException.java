@@ -1,7 +1,12 @@
 package com.studyplanner.userservice.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.RequiredArgsConstructor;
 
+
+@Builder
+@RequiredArgsConstructor
 public class ResponseException {
 
     @JsonProperty("status")
@@ -14,7 +19,6 @@ public class ResponseException {
     private String message;
 
     public ResponseException(int status, String code, String message) {
-        this.status = status;
         this.code = code;
         this.message = message;
     }

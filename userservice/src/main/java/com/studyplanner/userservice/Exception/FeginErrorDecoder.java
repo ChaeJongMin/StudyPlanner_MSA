@@ -8,8 +8,6 @@ public class FeginErrorDecoder implements ErrorDecoder {
     @Override
     public Exception decode(String methodKey, Response response) {
         switch (response.status()){
-            case 400:
-                break;
             case 404:
                 //메소드 getReviews 요청 시 발생한 예외를 처리
                 if (methodKey.contains("responseSuccessJoin")) {
@@ -17,6 +15,7 @@ public class FeginErrorDecoder implements ErrorDecoder {
                     return new FeignException("USER_REGISTRATION_FAILED", "User registration failed");
                 }
                 break;
+            case 400:
             default:
                 return new Exception(response.reason());
         }

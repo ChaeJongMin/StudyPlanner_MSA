@@ -21,19 +21,21 @@ public class GlobalExceptionController {
         String code = e.getCode();
         String message = e.getMessage();
 
-        log.error("CustomException : {}, {}, {}",status,code,message);
+        ResponseException responseException = ResponseException.builder()
+                .code(e.getCode())
+                .message(e.getMessage())
+                .build();
 
-        return ResponseEntity.status(status).body(new ResponseException(status.value(),code,message));
+        return ResponseEntity.status(status).body(responseException);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> responseDefaultException(Exception e){
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        String code = "Internal_Server_Error";
-        String message = e.getMessage();
+        ResponseException responseException = ResponseException.builder()
+                .code("Internal_Server_Error")
+                .message("서버 내부에 오류가 발생했습니다.")
+                .build();
 
-        log.error("500 Server Error: {}, {}, {}", status, code, message);
-
-        return ResponseEntity.status(status).body(new ResponseException(status.value(),code,message));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseException);
     }
 }

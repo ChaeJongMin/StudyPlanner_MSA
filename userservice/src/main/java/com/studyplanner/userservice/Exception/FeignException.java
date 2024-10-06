@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class FeignException extends CustomException {
 
     protected FeignException(String code, String message) {
-        super(HttpStatus.BAD_REQUEST, code, message);
+        super(HttpStatus.INTERNAL_SERVER_ERROR, code, message);
     }
 }

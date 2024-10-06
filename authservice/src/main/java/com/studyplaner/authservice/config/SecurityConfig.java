@@ -1,7 +1,6 @@
 package com.studyplaner.authservice.config;
 
 import com.studyplaner.authservice.Auth.CustomAuthenticationEntryPoint;
-import com.studyplaner.authservice.Auth.IssueAuthenticationFilter;
 import com.studyplaner.authservice.Auth.LoginAuthenticationFilter;
 import com.studyplaner.authservice.Repository.UserRepository;
 import com.studyplaner.authservice.service.*;
@@ -51,8 +50,7 @@ public class SecurityConfig {
                         .anyRequest().permitAll())
                 .authenticationManager(authenticationManager)
                 .exceptionHandling(conf -> conf.authenticationEntryPoint(customAuthenticationEntryPoint))
-                .addFilterBefore(loginAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(new IssueAuthenticationFilter(userServiceImpl,tokenUtil,redisUtil,responseTokenUtil),UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(loginAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

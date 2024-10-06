@@ -1,13 +1,10 @@
 package com.studyplaner.authservice.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.studyplaner.authservice.Error.CustomTokenException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -45,11 +42,6 @@ public class TokenUtil {
                 .getBody();
     }
 
-
-    public String getUsername(String token){
-        return extractAllClaims(token).get("userId", String.class);
-    }
-
     public Date getExpiredTime(String token) {
         return extractAllClaims(token).getExpiration();
     }
@@ -67,13 +59,18 @@ public class TokenUtil {
                 .compact();
     }
 
-    public Boolean isTokenExpired(String token){
-        final Date expiration = extractAllClaims(token).getExpiration();
+    public Boolean isTokenExpired(String token, Claims claims){
+        final Date expiration = claims.getExpiration();
         return expiration.before(new Date());
     }
 
-    public Boolean validateToken(String token, UserDetails userDetails){
-        final String username = getUsername(token);
-        return !isTokenExpired(token) && username.equals(userDetails.getUsername());
+    public Boolean validateToken(String token){
+        try{
+            Claims claims =  extractAllClaims(token);
+            return !isTokenExpired(token,claims);
+        } catch (MalformedJwtException |
+                  UnsupportedJwtException | IllegalArgumentException | ExpiredJwtException jwtException) {
+            throw new CustomTokenException(jwtException.getMessage(), jwtException.getClass().getSimpleName());
+        }
     }
 }

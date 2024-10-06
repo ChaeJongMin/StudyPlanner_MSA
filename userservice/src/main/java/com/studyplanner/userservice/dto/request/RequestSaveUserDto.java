@@ -1,6 +1,7 @@
 package com.studyplanner.userservice.dto.request;
 
 //import com.musicweb.userservice.domain.UserEntity;
+import com.studyplanner.userservice.domain.UserEntity;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -29,12 +30,11 @@ public class RequestSaveUserDto {
         this.password = convertPassword;
     }
 
-//    public UserEntity toUserEntity(){
-//        return UserEntity.builder()
-//                .userId(userId)
-//                .password(password)
-//                .nickname(nickname)
-//                .build();
-//    }
+    public UserEntity toUserEntity(){
+        return UserEntity.builder()
+                .userId(userId)
+                .nickname(nickname)
+                .build();
+    }
 
 }
