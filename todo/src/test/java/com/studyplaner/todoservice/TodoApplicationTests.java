@@ -1,4 +1,4 @@
-package com.studyplaner.todo;
+package com.studyplaner.todoservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

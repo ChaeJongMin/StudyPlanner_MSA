@@ -64,6 +64,12 @@ spring:
             - Path=/user-service/**
           filters:
             - RewritePath=/user-service/(?<segment>.*),/$\{segment}
+        - id: todo-service
+          uri: lb://TODO-SERVICE
+          predicates:
+            - Path=/todo-service/**
+          filters:
+            - RewritePath=/todo-service/(?<segment>.*),/$\{segment}
 
 jwt:
   secret: a2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbQ==

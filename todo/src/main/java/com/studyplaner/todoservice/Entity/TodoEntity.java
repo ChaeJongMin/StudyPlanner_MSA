@@ -1,4 +1,4 @@
-package com.studyplaner.todo.Entity;
+package com.studyplaner.todoservice.Entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -22,9 +22,6 @@ public class TodoEntity extends BaseEntity {
 
     @Column(nullable = false)
     private boolean isComplete;
-    //날짜 따로 추가 필요
-
-
 
     @Builder
     public TodoEntity(String context, long userId){

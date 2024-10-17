@@ -1,14 +1,11 @@
-package com.studyplaner.todo.Controller;
+package com.studyplaner.todoservice.Controller;
 
-import com.studyplaner.todo.Dto.ResponseException;
-import com.studyplaner.todo.Error.NotFoundUserOrTodoException;
+import com.studyplaner.todoservice.Dto.ResponseException;
+import com.studyplaner.todoservice.Error.NotFoundUserOrTodoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionController {

@@ -1,7 +1,5 @@
-package com.studyplaner.todo.Entity;
+package com.studyplaner.todoservice.Entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
@@ -12,18 +10,19 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-@EntityListeners(AuditingEntityListener.class)
+
 @MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 public abstract class BaseEntity {
+    @CreatedDate
+    private LocalDateTime createdDate;
 
-    private String createdAt;
-    private String modifiedAt;
+    private String createdAtString;
 
     @PrePersist
     void onPrePersist() {
-        this.createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        this.modifiedAt = createdAt;
+        this.createdAtString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
 }

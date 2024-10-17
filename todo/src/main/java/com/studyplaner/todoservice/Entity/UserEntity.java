@@ -1,4 +1,4 @@
-package com.studyplaner.todo.Entity;
+package com.studyplaner.todoservice.Entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
+@Table(name = "userTodo")
 public class UserEntity {
     @Id
     private long id;

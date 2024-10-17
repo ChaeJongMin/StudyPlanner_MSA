@@ -1,4 +1,4 @@
-package com.studyplaner.todo.Error;
+package com.studyplaner.todoservice.Error;
 
 import lombok.Getter;
 

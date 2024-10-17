@@ -1,12 +1,8 @@
-package com.studyplaner.todo.Service;
+package com.studyplaner.todoservice.Service;
 
-import com.studyplaner.todo.Dto.RequestSaveTodoDto;
-import com.studyplaner.todo.Dto.RequestUpdateTodoDto;
-import com.studyplaner.todo.Dto.ResponseCommon;
-import com.studyplaner.todo.Entity.TodoEntity;
+import com.studyplaner.todoservice.Dto.*;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface TodoService {
     //저장
@@ -18,7 +14,5 @@ public interface TodoService {
     //할일 완료
     public ResponseCommon completeTodo(RequestUpdateTodoDto requestUpdateTodoDto);
     //조회 (특정 달)
-    public List<TodoEntity> getListByMonth(int month);
-
-
+    public List<GetSimpleQueryDto> getListByMonth(RequestGetMonth requestGetMonth);
 }

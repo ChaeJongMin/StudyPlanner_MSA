@@ -20,12 +20,9 @@ import java.util.Map;
 
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
-
+        ObjectMapper objectMapper = new ObjectMapper();
         List<Class<? extends RuntimeException>> jwtExceptions =
                 List.of(MalformedJwtException.class,
                         UnsupportedJwtException.class,

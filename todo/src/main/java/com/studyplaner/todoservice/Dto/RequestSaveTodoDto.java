@@ -1,6 +1,6 @@
-package com.studyplaner.todo.Dto;
+package com.studyplaner.todoservice.Dto;
 
-import com.studyplaner.todo.Entity.TodoEntity;
+import com.studyplaner.todoservice.Entity.TodoEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

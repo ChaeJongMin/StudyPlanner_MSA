@@ -1,6 +1,6 @@
-package com.studyplaner.todo.Repository;
+package com.studyplaner.todoservice.Repository;
 
-import com.studyplaner.todo.Entity.UserEntity;
+import com.studyplaner.todoservice.Entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,22 +1,19 @@
-package com.studyplaner.todo.Service;
+package com.studyplaner.todoservice.Service;
 
-import com.studyplaner.todo.Dto.RequestSaveTodoDto;
-import com.studyplaner.todo.Error.NotFoundUserOrTodoException;
-import com.studyplaner.todo.Dto.RequestUpdateTodoDto;
-import com.studyplaner.todo.Dto.ResponseCommon;
-import com.studyplaner.todo.Entity.TodoEntity;
-import com.studyplaner.todo.Entity.UserEntity;
-import com.studyplaner.todo.Repository.TodoRepository;
-import com.studyplaner.todo.Repository.UserRepository;
+import com.studyplaner.todoservice.Dto.*;
+import com.studyplaner.todoservice.Error.NotFoundUserOrTodoException;
+import com.studyplaner.todoservice.Entity.TodoEntity;
+import com.studyplaner.todoservice.Entity.UserEntity;
+import com.studyplaner.todoservice.Repository.TodoRepository;
+import com.studyplaner.todoservice.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 
 @RequiredArgsConstructor
@@ -45,7 +42,7 @@ public class TodoServiceImpl implements TodoService{
         UserEntity userEntity =userRepository.findByUserId(requestSaveTodoDto.getUserId())
                 .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_User","해당 유저는 없습니다."));
         //Todo 객체 생성
-        Long id = userEntity.getId();
+        long id = userEntity.getId();
         TodoEntity todoEntity = requestSaveTodoDto.toTodoEntity(id);
 
         //Todo 객체 저장
@@ -59,7 +56,7 @@ public class TodoServiceImpl implements TodoService{
 
     @Transactional
     @Override
-    public ResponseCommon delete(long id) {
+    public ResponseCommon delete(@RequestParam long id) {
 
         todoRepository.deleteByUserId(id);
 
@@ -88,6 +85,7 @@ public class TodoServiceImpl implements TodoService{
                 .build();
     }
 
+    @Transactional
     @Override
     public ResponseCommon completeTodo(RequestUpdateTodoDto requestUpdateTodoDto) {
         UserEntity userEntity =userRepository.findByUserId(requestUpdateTodoDto.getUserId())
@@ -105,10 +103,12 @@ public class TodoServiceImpl implements TodoService{
     }
 
     @Override
-    public List<TodoEntity> getListByMonth(int month) {
-        LocalDate newDate = LocalDate.of(2021, 02,1);
-        int lengthOfMon = newDate.lengthOfMonth();
-        return null;
+    public List<GetSimpleQueryDto> getListByMonth(RequestGetMonth requestGetMonth) {
+
+        UserEntity userEntity =userRepository.findByUserId(requestGetMonth.getUserId())
+                .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_User","해당 유저는 없습니다."));
+
+        return todoRepository.findByDate(requestGetMonth.getMonthFormat(),userEntity.getId());
     }
 
 
