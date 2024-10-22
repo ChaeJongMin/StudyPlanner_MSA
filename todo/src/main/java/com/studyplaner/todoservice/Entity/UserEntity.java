@@ -21,4 +21,8 @@ public class UserEntity {
         this.id=id;
         this.userId=userId;
     }
+
+    public void update(String userId){
+        this.userId = userId;
+    }
 }
