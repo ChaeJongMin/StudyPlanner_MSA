@@ -62,27 +62,30 @@ public class StatisticEntity {
         this.monthlySuccessCnt += count;
     }
 
-    public void updateSuccessTodoCntToChangeCondition(int totalCount,int todayCount,String change){
-        this.successCnt +=totalCount;
+    public void updateSuccessTodoCntToChangeCondition(int totalCount, String change) {
+        this.successCnt += totalCount;
 
-        //월, 주 , 일 일떄
-        if(change.equals("month")){
-            this.monthlySuccessCnt = todayCount;
-            this.monthlyTotalTodoCount = todayCount;
-        }  else if(change.equals("week")){
-            this.weeklySuccessCnt = todayCount;
-            this.weeklyTotalTodoCount = todayCount;
-        } else if(){
-            this.monthlySuccessCnt = todayCount;
-            this.monthlyTotalTodoCount = todayCount;
-            this.weeklySuccessCnt = todayCount;
-            this.weeklyTotalTodoCount = todayCount;
+        switch (change) {
+            case "weekmonth":
+                this.weeklyTotalTodoCount = 0;
+                this.weeklySuccessCnt = 0;
+                this.monthlyTotalTodoCount = 0;
+                this.monthlySuccessCnt = 0;
+                break;
+
+            case "month":
+                this.monthlyTotalTodoCount = 0;
+                this.monthlySuccessCnt = 0;
+                break;
+
+            case "weekly":
+                this.weeklyTotalTodoCount = 0;
+                this.weeklySuccessCnt = 0;
+                break;
         }
+
         this.dailySuccessCnt = 0;
         this.dailyTotalTodoCount = 0;
-
-        this.dailySuccessCnt +=count;
-        this.weeklySuccessCnt += count;
     }
 
     public void updateTotalCnt(){

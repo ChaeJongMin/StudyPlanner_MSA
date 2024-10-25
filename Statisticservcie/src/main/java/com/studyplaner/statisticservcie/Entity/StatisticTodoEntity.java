@@ -25,9 +25,11 @@ public class StatisticTodoEntity { //타 서비스의 Todo 엔티티 데이터 �
         this.todayCount = 0;
         this.yesterdayCount=0;
     }
+
     public void update(){
         this.todayCount+=1;
     }
+
     public void init(String date){
         this.todayCount=0;
         this.yesterdayCount=0;

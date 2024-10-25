@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studyplaner.statisticservcie.Entity.StatisticEntity;
 import com.studyplaner.statisticservcie.Entity.StatisticTodoEntity;
+import com.studyplaner.statisticservcie.Lock.SharedState;
 import com.studyplaner.statisticservcie.Repository.StatisticRepository;
 import com.studyplaner.statisticservcie.Repository.StatisticTodoRepository;
 import jakarta.transaction.Transactional;
@@ -14,6 +15,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +29,7 @@ public class KafkaConsumer {
 
     private final StatisticRepository statisticRepository;
     private final StatisticTodoRepository statisticTodoRepository;
+    private final SharedState sharedState;
 
     @Transactional
     @KafkaListener(topics = "")
@@ -64,12 +68,11 @@ public class KafkaConsumer {
 
         LocalDate today = LocalDate.now();
         // 원하는 형식으로 포맷터를 생성합니다.
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd:HH-mm-ss");
         // 날짜를 포맷팅합니다.
         String formattedDate = today.format(formatter);
 
         try{
-
             kafkaConsumerMap = objectMapper.readValue(kafkaMessage, new TypeReference<Map<Object,Object>>() {});
         } catch (JsonProcessingException e) {
             //따로 로직 처리 필요
@@ -81,12 +84,24 @@ public class KafkaConsumer {
 
         //일,주,월 달성률 처리
         String date = ((String)kafkaConsumerMap.get("date"));
-        if(statisticTodoEntity.isPresent()){
-            if(!date.equals(formattedDate)){
-                statisticTodoEntity.get().updateDateAndCnt(formattedDate,1);
-            } else {
-                statisticTodoEntity.get().update();
-            }
+        LocalDateTime dateTime = LocalDateTime.parse(date, formatter);
+
+        LocalTime time = dateTime.toLocalTime();
+
+        // 23시 59분 45초를 기준으로 설정
+        LocalTime threshold = LocalTime.of(23, 59, 45);
+
+        if(time.isAfter(threshold) && sharedState.isFlag()){ //특정 시간 이후면
+            sharedState.getEntityQueue().add(statisticTodoEntity);
+
+        } else {
+            //                if(!date.equals(formattedDate)){
+            //                    statisticTodoEntity.get().updateDateAndCnt(formattedDate,1);
+            //                } else {
+            //                    statisticTodoEntity.get().update();
+            //                }
+            statisticTodoEntity.ifPresent(StatisticTodoEntity::update);
+            if(!sharedState.isFlag()) sharedState.processQueue();
         }
     }
 }

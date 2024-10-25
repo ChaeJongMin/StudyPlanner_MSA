@@ -2,11 +2,13 @@ package com.studyplaner.statisticservcie.Service;
 
 import com.studyplaner.statisticservcie.Entity.StatisticEntity;
 import com.studyplaner.statisticservcie.Entity.StatisticTodoEntity;
+import com.studyplaner.statisticservcie.Lock.SharedState;
 import com.studyplaner.statisticservcie.Repository.StatisticRepository;
 import com.studyplaner.statisticservcie.Repository.StatisticTodoRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -26,42 +28,31 @@ public class SchedulerService {
 
     private final StatisticTodoRepository statisticTodoRepository;
     private final StatisticRepository statisticRepository;
-
+    private final SharedState sharedState;
     @Transactional
-    @Scheduled(cron = "0 0 */2 * * ?")
+    @Scheduled(cron = "5 0 */2 * * ?")
     public void runForCompleteTodo() {
-        LocalTime now = LocalTime.now();
-        LocalDate today = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String todayDateString = today.format(formatter);
 
-        // 오늘 날짜 기준 주와 월이 변경되었는지 확인
-        boolean isNewWeek = isNewWeek(today);
-        boolean isNewMonth = isNewMonth(today);
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        String todayDateString = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
         List<StatisticEntity> statisticEntities = statisticRepository.findAll();
 
         for (StatisticEntity entity : statisticEntities) {
             StatisticTodoEntity todoEntity = entity.getStatisticTodo();
-            int totalCount = 0;
+            int totalCount = todoEntity.getTodayCount();
 
             if (now.equals(LocalTime.MIDNIGHT)) {
-                // 현재 시간이 00:00일 때
-                String todoDate = todoEntity.getDate();
-                int yesterdayCount = !todoDate.equals(todayDateString) ? todoEntity.getTodayCount() : todoEntity.getYesterdayCount();
-                totalCount = !todoDate.equals(todayDateString) ? yesterdayCount : yesterdayCount + todoEntity.getTodayCount();
 
-                String change = "";
-                if(isNewMonth){
-                    change = "month";
-                } else if(isNewWeek){
-                    change = "week";
-                }
-                entity.updateSuccessTodoCntToChangeCondition(totalCount,change);
+                boolean isNewWeek = isNewWeek(today);
+                boolean isNewMonth = isNewMonth(today);
+                String changeCondition = (isNewMonth ? "month" : "") + (isNewWeek ? "week" : "");
+
+                entity.updateSuccessTodoCntToChangeCondition(totalCount, changeCondition);
                 todoEntity.init(todayDateString);
+                sharedState.setFlag(false);
             } else {
-                // 00:00이 아닐 때
-                totalCount = todoEntity.getTodayCount();
                 entity.updateSuccessTodoCnt(totalCount);
                 todoEntity.init("");
             }
@@ -82,4 +73,11 @@ public class SchedulerService {
         LocalDate previousDay = date.minusDays(1);
         return date.getMonth() != previousDay.getMonth();
     }
+
+    @Async
+    @Scheduled(cron = "30 59 23 * * *")
+    public void toggleVariable() {
+        sharedState.setFlag(true);
+    }
+
 }
