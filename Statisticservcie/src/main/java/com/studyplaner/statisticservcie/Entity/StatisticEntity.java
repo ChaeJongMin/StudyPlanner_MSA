@@ -1,5 +1,6 @@
 package com.studyplaner.statisticservcie.Entity;
 
+import com.studyplaner.statisticservcie.Dto.ResponseMultiDto;
 import com.studyplaner.statisticservcie.Dto.ResponseSingleDto;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -47,12 +48,40 @@ public class StatisticEntity {
         return ResponseSingleDto.builder()
                 .successCnt(this.successCnt)
                 .totalCnt(this.totalTodoCount)
-                .totalSuccessRate(calculateTotalSuccessRate())
+                .failCnt(this.totalTodoCount-this.successCnt)
+                .totalSuccessRate(calculateTotalSuccessRate("total"))
                 .build();
     }
 
-    private double calculateTotalSuccessRate() {
-        return totalTodoCount == 0 ? 0 : ((double) successCnt / totalTodoCount) * 100;
+    public ResponseMultiDto toResponseMultiDto(){
+        return ResponseMultiDto.builder()
+                .dailySuccessRate(calculateTotalSuccessRate("daily"))
+                .weeklySuccessRate(calculateTotalSuccessRate("week"))
+                .monthlySuccessRate(calculateTotalSuccessRate("month"))
+                .totalSuccessRate(calculateTotalSuccessRate("total"))
+                .build();
+    }
+
+    public double calculateTotalSuccessRate(String type) {
+        double rate = 0.0;
+        switch (type){
+            case "total" :
+                rate = this.totalTodoCount == 0 ? 0 : ((double) this.successCnt / this.totalTodoCount) * 100;
+                break;
+            case "daily" :
+                rate = this.dailyTotalTodoCount == 0 ? 0 : ((double) this.dailySuccessCnt / this.dailyTotalTodoCount) * 100;
+                break;
+            case "week" :
+                rate = this.weeklyTotalTodoCount == 0 ? 0 : ((double) this.weeklySuccessCnt / this.weeklyTotalTodoCount) * 100;
+                break;
+            case "month" :
+                rate = this.monthlyTotalTodoCount == 0 ? 0 : ((double) this.monthlySuccessCnt / this.monthlyTotalTodoCount) * 100;
+                break;
+            default:
+                rate = 0.0;
+        }
+
+        return rate;
     }
 
     public void updateSuccessTodoCnt(int count){

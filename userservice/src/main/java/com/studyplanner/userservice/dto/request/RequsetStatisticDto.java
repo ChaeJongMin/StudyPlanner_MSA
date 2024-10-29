@@ -1,11 +1,13 @@
-package com.studyplaner.statisticservcie.Dto;
+package com.studyplanner.userservice.dto.request;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Normalized;
 
 @Getter
 @Builder
-public class ResponseMultiDto {
+public class RequsetStatisticDto {
 
     private double totalSuccessRate;
     private double dailySuccessRate;

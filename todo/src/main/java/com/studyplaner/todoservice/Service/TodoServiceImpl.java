@@ -4,6 +4,8 @@ import com.studyplaner.todoservice.Dto.*;
 import com.studyplaner.todoservice.Error.NotFoundUserOrTodoException;
 import com.studyplaner.todoservice.Entity.TodoEntity;
 import com.studyplaner.todoservice.Entity.UserEntity;
+import com.studyplaner.todoservice.MessageQueue.KafkaProducer;
+import com.studyplaner.todoservice.MessageQueue.KakfaSendDto;
 import com.studyplaner.todoservice.Repository.TodoRepository;
 import com.studyplaner.todoservice.Repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -33,7 +35,7 @@ public class TodoServiceImpl implements TodoService{
 
     private final UserRepository userRepository;
     private final TodoRepository todoRepository;
-
+    private final KafkaProducer kafkaProducer;
     @Transactional
     @Override
     public ResponseCommon save(RequestSaveTodoDto requestSaveTodoDto) {
@@ -47,6 +49,9 @@ public class TodoServiceImpl implements TodoService{
 
         //Todo 객체 저장
         todoRepository.save(todoEntity);
+
+        //kafka를 통해 통계 서비스에 메시지 전달
+        kafkaProducer.sendTodoCreate(new KakfaSendDto(id,todoEntity.getCreatedAtString()));
 
         return ResponseCommon.builder()
                 .code(SAVE_CODE)
@@ -95,6 +100,9 @@ public class TodoServiceImpl implements TodoService{
                 .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_Todo","해당 할일을 찾을 수 없습니다.."));
 
         todoEntity.complete();
+
+        //Kafka를 통해 통계서비스에 메시지 전달
+        kafkaProducer.sendTodoSuccess(new KakfaSendDto(todoEntity.getUserId(),todoEntity.getCreatedAtString()));
 
         return ResponseCommon.builder()
                 .code(COMPLETE_CODE)

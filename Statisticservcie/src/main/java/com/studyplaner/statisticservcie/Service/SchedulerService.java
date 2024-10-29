@@ -42,7 +42,9 @@ public class SchedulerService {
         for (StatisticEntity entity : statisticEntities) {
             StatisticTodoEntity todoEntity = entity.getStatisticTodo();
             int totalCount = todoEntity.getTodayCount();
-
+            if(todoEntity.getTodayCount() ==0 && todoEntity.getYesterdayCount() == 0){
+                continue;
+            }
             if (now.equals(LocalTime.MIDNIGHT)) {
 
                 boolean isNewWeek = isNewWeek(today);

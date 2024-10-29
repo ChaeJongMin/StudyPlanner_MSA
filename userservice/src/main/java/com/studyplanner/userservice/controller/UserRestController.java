@@ -2,6 +2,7 @@ package com.studyplanner.userservice.controller;
 
 import com.studyplanner.userservice.dto.request.RequestSaveUserDto;
 import com.studyplanner.userservice.dto.request.RequestUpdateUserDto;
+import com.studyplanner.userservice.dto.request.RequsetStatisticDto;
 import com.studyplanner.userservice.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,17 @@ public class UserRestController {
     //수정
     @PutMapping("/user/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody RequestUpdateUserDto user){
+
+        userService.update(id,user.getNickname());
         return ResponseEntity.ok("success update user");
+
+    }
+
+    @GetMapping("/user/myPage/{id}")
+    public ResponseEntity<RequsetStatisticDto> getMyPageInfo(@PathVariable Long id){
+        RequsetStatisticDto requsetStatisticDto = userService.getStatistic(id);
+        return ResponseEntity.ok(requsetStatisticDto);
+
     }
 
     //삭제

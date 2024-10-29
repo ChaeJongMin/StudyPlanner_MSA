@@ -7,6 +7,7 @@ import com.studyplaner.authservice.Entity.UserEntity;
 import com.studyplaner.authservice.Error.CustomTokenException;
 import com.studyplaner.authservice.Repository.UserRepository;
 import jakarta.servlet.http.Cookie;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.User;
@@ -25,6 +26,8 @@ public class UserServiceImpl implements UserService{
     private final TokenUtil tokenUtil;
     private final CookieUtil cookieUtil;
     private final RedisUtil redisUtil;
+
+    @Transactional
     @Override
     public Long save(RequestJoinUserDto requestJoinUserDto) {
         UserEntity userEntity = userRepository.save(requestJoinUserDto.toUserEntity());

@@ -27,7 +27,7 @@ public class SharedState {
 
 
 
-    public boolean processQueue() {
+    public synchronized boolean processQueue() {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String currentDate = LocalDate.now().format(dateFormatter);
 
@@ -36,5 +36,9 @@ public class SharedState {
             entityOpt.ifPresent(entity -> entity.updateDateAndCnt(currentDate, 1));
         }
         return true;
+    }
+
+    public boolean emptyCheck(){
+        return entityQueue.isEmpty();
     }
 }

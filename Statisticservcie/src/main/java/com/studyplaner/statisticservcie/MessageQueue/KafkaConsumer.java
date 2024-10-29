@@ -31,9 +31,9 @@ public class KafkaConsumer {
     private final StatisticTodoRepository statisticTodoRepository;
     private final SharedState sharedState;
 
-    @Transactional
-    @KafkaListener(topics = "")
-    public void createTodo(String kafkaMessage){
+        @Transactional
+        @KafkaListener(topics = "")
+        public void createTodo(String kafkaMessage){
         Map<Object,Object> kafkaConsumerMap= new HashMap<>();
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -101,7 +101,8 @@ public class KafkaConsumer {
             //                    statisticTodoEntity.get().update();
             //                }
             statisticTodoEntity.ifPresent(StatisticTodoEntity::update);
-            if(!sharedState.isFlag()) sharedState.processQueue();
+            if(!sharedState.isFlag() && !sharedState.emptyCheck())
+                sharedState.processQueue();
         }
     }
 }
