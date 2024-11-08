@@ -22,7 +22,7 @@ public abstract class BaseEntity {
 
     @PrePersist
     void onPrePersist() {
-        this.createdAtString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        this.createdAtString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd:HH-mm-ss"));
     }
 
 }

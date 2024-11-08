@@ -23,6 +23,7 @@ public class TodoEntity extends BaseEntity {
     @Column(nullable = false)
     private boolean isComplete;
 
+
     @Builder
     public TodoEntity(String context, long userId){
         this.context=context;

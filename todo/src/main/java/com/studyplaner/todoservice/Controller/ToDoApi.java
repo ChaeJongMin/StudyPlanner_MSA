@@ -39,8 +39,8 @@ public class ToDoApi {
         return ResponseEntity.status(HttpStatus.OK).body(resultList);
     }
     //할일 삭제
-    @DeleteMapping("/todo")
-    public ResponseEntity<ResponseCommon> deleteTodo(@RequestParam long id){
+    @DeleteMapping("/todo/{id}")
+    public ResponseEntity<ResponseCommon> deleteTodo(@PathVariable long id){
         todoService.delete(id);
 
         final ResponseCommon responseCommon = ResponseCommon.builder()
@@ -65,6 +65,7 @@ public class ToDoApi {
 
     @PutMapping("/todo/complete")
     public ResponseEntity<ResponseCommon> setCompleteTodo(@RequestBody RequestUpdateTodoDto requestUpdateTodoDto){
+        log.info("완료 요청을 전달합니다.");
         todoService.completeTodo(requestUpdateTodoDto);
 
         final ResponseCommon responseCommon = ResponseCommon.builder()

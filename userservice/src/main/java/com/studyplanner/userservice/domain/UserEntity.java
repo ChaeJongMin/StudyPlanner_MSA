@@ -25,4 +25,8 @@ public class UserEntity {
         this.userId = userId;
         this.nickname = nickname;
     }
+
+    public void update(String nickname){
+        this.nickname = nickname;
+    }
 }

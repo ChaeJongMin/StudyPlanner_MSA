@@ -27,3 +27,12 @@ spring:
       hibernate:
         format_sql: true
         default_batch_fetch_size: 1000 #최적화 옵션
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      backendService:
+        failure-rate-threshold: 50 # 오류 비율이 50%를 초과하면 회로가 열림
+        wait-duration-in-open-state: 10000ms # 회로가 열린 상태를 유지하는 시간
+        permitted-number-of-calls-in-half-open-state: 3 # 회로가 반열림 상태에서 허용되는 호출 수
+        sliding-window-size: 10 # 슬라이딩 창 크기

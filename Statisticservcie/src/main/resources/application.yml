@@ -12,10 +12,10 @@ eureka:
 
 spring:
   application:
-    name: todo-service
+    name: statistic-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/todo_db?&serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/statistic_db?&serverTimezone=Asia/Seoul
     username: root
     password: test1234
   jpa:

@@ -35,16 +35,8 @@ public class AuthApi {
         return ResponseEntity.ok(json);
     }
 
-    @PostMapping("/users")
-    public ResponseEntity<?> registerUser(@RequestBody RequestJoinUserDto requestJoinUserDto){
-        log.info("user-service로부터 회원가입 정보를 받아왔습니다.");
-        log.info("가입한 유저 정보 - Id : "+requestJoinUserDto.getUserId() +" 비밀번호 : "+requestJoinUserDto.getPassword());
-        userServiceImpl.save(requestJoinUserDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(true);
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestParam String userId){
+    @PostMapping("/logout/{userId}")
+    public ResponseEntity<?> logout(@PathVariable long userId){
 
         return null;
     }
