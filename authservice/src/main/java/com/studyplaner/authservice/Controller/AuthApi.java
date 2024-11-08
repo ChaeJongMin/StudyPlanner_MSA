@@ -35,8 +35,8 @@ public class AuthApi {
         return ResponseEntity.ok(json);
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestParam String userId){
+    @PostMapping("/logout/{userId}")
+    public ResponseEntity<?> logout(@PathVariable long userId){
 
         return null;
     }

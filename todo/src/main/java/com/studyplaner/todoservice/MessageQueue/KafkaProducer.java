@@ -18,6 +18,7 @@ public class KafkaProducer {
     //통계서비스에 1. todo 생성 2. todo 클리어 정보 전달
 
     public void sendTodoCreate(KakfaSendDto kakfaSendDto){
+        log.info("sendTodoCreate 메시지가 토픽으로 전달됩니다.");
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonToMessage = "";
         //userId와 날짜
@@ -26,7 +27,7 @@ public class KafkaProducer {
         } catch (JsonProcessingException ex){
             ex.printStackTrace();
         }
-        String topic="";
+        String topic="todo-statistic-create";
         kafkaTemplate.send(topic,jsonToMessage);
     }
 
@@ -38,7 +39,7 @@ public class KafkaProducer {
         } catch (JsonProcessingException ex){
             ex.printStackTrace();
         }
-        String topic = "";
+        String topic = "todo-statistic-success";
         kafkaTemplate.send(topic,jsonToMessage);
     }
 

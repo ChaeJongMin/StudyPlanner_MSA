@@ -17,7 +17,7 @@ public class KafkaProducer {
 
     public void sendRegisterUser(ResponseJoinForAuthServerDto responseJoinForAuthServerDto){
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonToMessage = "";
+        String jsonToMessage = "user-auth-event";
         //userId와 날짜
         try{
             jsonToMessage = objectMapper.writeValueAsString(responseJoinForAuthServerDto);
@@ -30,7 +30,7 @@ public class KafkaProducer {
 
     public void sendUpdateNicKName(KafkaSendDto kakfaSendDto){
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonToMessage = "";
+        String jsonToMessage = "user-todo-event";
         //userId와 날짜
         try{
             jsonToMessage = objectMapper.writeValueAsString(kakfaSendDto);

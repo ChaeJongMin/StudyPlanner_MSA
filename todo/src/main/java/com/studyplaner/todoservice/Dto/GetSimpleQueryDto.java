@@ -13,10 +13,12 @@ public class GetSimpleQueryDto {
     private boolean isComplete;
     private int day;
 
-    public GetSimpleQueryDto(long id, String contetn, boolean isComplete, int day){
+    public GetSimpleQueryDto(long id, String content, boolean isComplete, int day){
         this.id = id;
-        this.content = contetn;
+        this.content = content;
         this.isComplete =isComplete;
         this.day= day;
     }
+
+
 }

@@ -25,7 +25,7 @@ public class KafkaConsumer {
     private final UserRepository userRepository;
 
     @Transactional
-    @KafkaListener(topics = "")
+    @KafkaListener(topics = "user-todo-event", groupId = "Todo-ConsumerGroupId-user")
     public void updateUser(String kafkaMessage){
         Map<Object,Object> kafkaConsumerMap= new HashMap<>();
         ObjectMapper objectMapper = new ObjectMapper();

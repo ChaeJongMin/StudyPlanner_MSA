@@ -3,21 +3,18 @@ package com.studyplaner.statisticservcie.MessageQueue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.studyplaner.statisticservcie.Entity.StatisticEntity;
-import com.studyplaner.statisticservcie.Entity.StatisticTodoEntity;
-import com.studyplaner.statisticservcie.Lock.SharedState;
-import com.studyplaner.statisticservcie.Repository.StatisticRepository;
-import com.studyplaner.statisticservcie.Repository.StatisticTodoRepository;
+import com.studyplaner.statisticservcie.Entity.StatisticDetailEntity;
+import com.studyplaner.statisticservcie.Entity.StatisticTotalEntity;
+import com.studyplaner.statisticservcie.Error.CustomException;
+import com.studyplaner.statisticservcie.Repository.StatisticTotalRepository;
+import com.studyplaner.statisticservcie.Repository.StatisticDetailRepository;
+import com.studyplaner.statisticservcie.Service.StatisticUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -27,12 +24,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class KafkaConsumer {
 
-    private final StatisticRepository statisticRepository;
-    private final StatisticTodoRepository statisticTodoRepository;
-    private final SharedState sharedState;
+    private final StatisticTotalRepository statisticTotalRepository;
+    private final StatisticDetailRepository statisticDetailRepository;
+    private final StatisticUtil statisticUtil;
 
         @Transactional
-        @KafkaListener(topics = "")
+        @KafkaListener(topics = "todo-statistic-create",groupId = "Statistic-ConsumerGroupId-create")
         public void createTodo(String kafkaMessage){
         Map<Object,Object> kafkaConsumerMap= new HashMap<>();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -43,34 +40,36 @@ public class KafkaConsumer {
             //따로 로직 처리 필요
         }
 
-        long userId = (Long)kafkaConsumerMap.get("userPk");
-        //241023 예외처리
-        Optional<StatisticEntity> statisticEntity = statisticRepository.findByUserId(userId);
-
+        long userId = Long.parseLong(String.valueOf((Integer)kafkaConsumerMap.get("userId")));
         String date = (String)kafkaConsumerMap.get("date");
-        if(statisticEntity.isPresent()){
-            statisticEntity.get().updateTotalCnt();
+        String convertDate= statisticUtil.getCurrentWeekOfMonth(date);
+        Optional<StatisticTotalEntity> optionalEntity = statisticTotalRepository.findByUserId(userId);
+        Optional<StatisticDetailEntity> detailEntity = statisticDetailRepository.findByUserIdAndDate(userId,convertDate);
+        if(optionalEntity.isEmpty()){
+
+            statisticTotalRepository.save(StatisticTotalEntity.builder()
+                    .userId(userId)
+                    .build());
+
+            if(detailEntity.isEmpty()){
+                statisticDetailRepository.save(StatisticDetailEntity.builder()
+                        .date(convertDate)
+                        .userId(userId)
+                        .build());
+            }
+
         } else {
-            StatisticTodoEntity statisticTodoEntity = new StatisticTodoEntity(userId,date);
-            StatisticEntity statistic = new StatisticEntity(userId, statisticTodoEntity);
-
-            statisticTodoRepository.save(statisticTodoEntity);
-            statisticRepository.save(statistic);
-
+            optionalEntity.get().updateCreateCnt("Add");
+            detailEntity.get().updateCreateCount("Add");
         }
+
     }
 
     @Transactional
-    @KafkaListener(topics = "")
+    @KafkaListener(topics = "todo-statistic-success",groupId = "Statistic-ConsumerGroupId-success")
     public void SuccessTodo(String kafkaMessage){
         Map<Object,Object> kafkaConsumerMap= new HashMap<>();
         ObjectMapper objectMapper = new ObjectMapper();
-
-        LocalDate today = LocalDate.now();
-        // 원하는 형식으로 포맷터를 생성합니다.
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd:HH-mm-ss");
-        // 날짜를 포맷팅합니다.
-        String formattedDate = today.format(formatter);
 
         try{
             kafkaConsumerMap = objectMapper.readValue(kafkaMessage, new TypeReference<Map<Object,Object>>() {});
@@ -78,31 +77,54 @@ public class KafkaConsumer {
             //따로 로직 처리 필요
         }
         //241023 예외처리
-        long userId = (Long)kafkaConsumerMap.get("userPk");
+        long userId = Long.parseLong(String.valueOf((Integer)kafkaConsumerMap.get("userId")));
         //kafka 예외 처리 로직 필요
-        Optional<StatisticTodoEntity> statisticTodoEntity = statisticTodoRepository.findByUserId(userId);
+        String date = (String)kafkaConsumerMap.get("date");
+        String convertDate= statisticUtil.getCurrentWeekOfMonth(date);
 
-        //일,주,월 달성률 처리
-        String date = ((String)kafkaConsumerMap.get("date"));
-        LocalDateTime dateTime = LocalDateTime.parse(date, formatter);
+        StatisticDetailEntity detailEntity = statisticDetailRepository.findByUserIdAndDate(userId,convertDate)
+                .orElseThrow(()-> new CustomException ("NOT_FOUNDED_USER", "해당 유저는 없습니다."));
 
-        LocalTime time = dateTime.toLocalTime();
+        detailEntity.updateCreateCount("Add");
 
-        // 23시 59분 45초를 기준으로 설정
-        LocalTime threshold = LocalTime.of(23, 59, 45);
+    }
 
-        if(time.isAfter(threshold) && sharedState.isFlag()){ //특정 시간 이후면
-            sharedState.getEntityQueue().add(statisticTodoEntity);
 
+    @Transactional
+    @KafkaListener(topics = "todo-statistic-delete", groupId = "Statistic-ConsumerGroupId-delete")
+    public void deleteTodo(String kafkaMessage) {
+        Map<Object, Object> kafkaConsumerMap = new HashMap<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            kafkaConsumerMap = objectMapper.readValue(kafkaMessage, new TypeReference<Map<Object, Object>>() {});
+        } catch (JsonProcessingException e) {
+            // 예외 처리 로직 필요
+        }
+
+        long userId = Long.parseLong(String.valueOf((Integer) kafkaConsumerMap.get("userId")));
+        String date = (String) kafkaConsumerMap.get("date");
+        boolean isSuccess = (boolean) kafkaConsumerMap.get("isComplete");
+
+        StatisticTotalEntity statisticTotalEntity = statisticTotalRepository.findByUserId(userId).orElse(null);
+        StatisticDetailEntity statisticDetailEntity = statisticDetailRepository.findByUserIdAndDate(userId, date).orElse(null);
+
+        if (statisticTotalEntity != null && statisticDetailEntity != null) {
+            if (statisticTotalEntity.getCreateCount() > 0) {
+                statisticTotalEntity.updateCreateCnt("Delete");
+            }
+            if (isSuccess || statisticTotalEntity.getSuccessCnt() > 0) {
+                statisticTotalEntity.updateSuccessCnt("Delete");
+            }
+
+            if (statisticDetailEntity.getCreateCnt() > 0) {
+                statisticDetailEntity.updateCreateCount("Delete");
+            }
+            if (isSuccess || statisticDetailEntity.getSuccessCnt() > 0) {
+                statisticDetailEntity.updateSuccessCount("Delete");
+            }
         } else {
-            //                if(!date.equals(formattedDate)){
-            //                    statisticTodoEntity.get().updateDateAndCnt(formattedDate,1);
-            //                } else {
-            //                    statisticTodoEntity.get().update();
-            //                }
-            statisticTodoEntity.ifPresent(StatisticTodoEntity::update);
-            if(!sharedState.isFlag() && !sharedState.emptyCheck())
-                sharedState.processQueue();
+            //별도의 처리 필요
         }
     }
 }

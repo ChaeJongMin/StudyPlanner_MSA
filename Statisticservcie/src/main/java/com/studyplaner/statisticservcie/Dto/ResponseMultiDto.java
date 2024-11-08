@@ -13,5 +13,5 @@ public class ResponseMultiDto {
     private double monthlySuccessRate;
     private int totalCount = 0;
     private int successCount = 0;
-    private int failCount = 0;
+
 }

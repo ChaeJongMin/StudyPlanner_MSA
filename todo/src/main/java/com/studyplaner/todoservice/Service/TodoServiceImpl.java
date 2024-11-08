@@ -36,6 +36,7 @@ public class TodoServiceImpl implements TodoService{
     private final UserRepository userRepository;
     private final TodoRepository todoRepository;
     private final KafkaProducer kafkaProducer;
+
     @Transactional
     @Override
     public ResponseCommon save(RequestSaveTodoDto requestSaveTodoDto) {
@@ -51,7 +52,7 @@ public class TodoServiceImpl implements TodoService{
         todoRepository.save(todoEntity);
 
         //kafka를 통해 통계 서비스에 메시지 전달
-        kafkaProducer.sendTodoCreate(new KakfaSendDto(id,todoEntity.getCreatedAtString()));
+        kafkaProducer.sendTodoCreate(new KakfaSendDto(id,todoEntity.getCreatedAtString().split(":")[0]));
 
         return ResponseCommon.builder()
                 .code(SAVE_CODE)
@@ -102,7 +103,7 @@ public class TodoServiceImpl implements TodoService{
         todoEntity.complete();
 
         //Kafka를 통해 통계서비스에 메시지 전달
-        kafkaProducer.sendTodoSuccess(new KakfaSendDto(todoEntity.getUserId(),todoEntity.getCreatedAtString()));
+        kafkaProducer.sendTodoSuccess(new KakfaSendDto(todoEntity.getUserId(),todoEntity.getCreatedAtString().split(":")[0]));
 
         return ResponseCommon.builder()
                 .code(COMPLETE_CODE)
@@ -113,8 +114,10 @@ public class TodoServiceImpl implements TodoService{
     @Override
     public List<GetSimpleQueryDto> getListByMonth(RequestGetMonth requestGetMonth) {
 
+
         UserEntity userEntity =userRepository.findByUserId(requestGetMonth.getUserId())
                 .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_User","해당 유저는 없습니다."));
+
 
         return todoRepository.findByDate(requestGetMonth.getMonthFormat(),userEntity.getId());
     }

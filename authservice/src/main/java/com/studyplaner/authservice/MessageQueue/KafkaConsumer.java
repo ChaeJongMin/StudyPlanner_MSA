@@ -21,7 +21,7 @@ public class KafkaConsumer {
 
     private final UserServiceImpl userService;
 
-    @KafkaListener(topics = "")
+    @KafkaListener(topics = "user-auth-event", groupId = "Auth-ConsumerGroupId-Register")
     public void createUser(String kafkaMessage){
         Map<Object,Object> kafkaConsumerMap= new HashMap<>();
         ObjectMapper objectMapper = new ObjectMapper();

@@ -18,8 +18,8 @@ public class StatisticApi {
 
     private final StatisticServiceImpl statisticService;
     //전체 정보 요청
-    @GetMapping("/singleStatistics")
-    public ResponseEntity<ResponseSingleDto> getSingleStatistics(@RequestParam long userId){
+    @GetMapping("/singleStatistics/{userId}")
+    public ResponseEntity<ResponseSingleDto> getSingleStatistics(@PathVariable long userId){
 
         return ResponseEntity.status(200).body(statisticService.getSingleStatisticInfo(userId));
     }

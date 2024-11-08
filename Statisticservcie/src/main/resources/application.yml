@@ -15,12 +15,12 @@ spring:
     name: statistic-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/user_db?&serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/statistic_db?&serverTimezone=Asia/Seoul
     username: root
     password: test1234
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     properties:
