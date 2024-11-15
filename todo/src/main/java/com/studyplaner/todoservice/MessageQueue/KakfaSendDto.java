@@ -1,17 +1,15 @@
 package com.studyplaner.todoservice.MessageQueue;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
+@Builder
 @Getter
 public class KakfaSendDto {
 
     private long userId;
     private String date;
+    private int count;
 
-    public KakfaSendDto(long userId, String date){
-        this.userId = userId;
-        this.date = date;
-    }
 }

@@ -42,25 +42,27 @@ public class KafkaConsumer {
 
         long userId = Long.parseLong(String.valueOf((Integer)kafkaConsumerMap.get("userId")));
         String date = (String)kafkaConsumerMap.get("date");
+        int count = (Integer)kafkaConsumerMap.get("count");
+
         String convertDate= statisticUtil.getCurrentWeekOfMonth(date);
         Optional<StatisticTotalEntity> optionalEntity = statisticTotalRepository.findByUserId(userId);
         Optional<StatisticDetailEntity> detailEntity = statisticDetailRepository.findByUserIdAndDate(userId,convertDate);
-        if(optionalEntity.isEmpty()){
+        if(optionalEntity.isEmpty() && detailEntity.isEmpty()){
 
             statisticTotalRepository.save(StatisticTotalEntity.builder()
                     .userId(userId)
+                    .createCount(count)
                     .build());
 
-            if(detailEntity.isEmpty()){
-                statisticDetailRepository.save(StatisticDetailEntity.builder()
-                        .date(convertDate)
-                        .userId(userId)
-                        .build());
-            }
+            statisticDetailRepository.save(StatisticDetailEntity.builder()
+                    .date(convertDate)
+                    .userId(userId)
+                    .createCnt(count)
+                    .build());
 
         } else {
-            optionalEntity.get().updateCreateCnt("Add");
-            detailEntity.get().updateCreateCount("Add");
+            optionalEntity.get().updateCreateCnt(count);
+            detailEntity.get().updateCreateCount(count);
         }
 
     }
@@ -68,6 +70,7 @@ public class KafkaConsumer {
     @Transactional
     @KafkaListener(topics = "todo-statistic-success",groupId = "Statistic-ConsumerGroupId-success")
     public void SuccessTodo(String kafkaMessage){
+        log.info("할일 완료 메시지를 받았습니다.");
         Map<Object,Object> kafkaConsumerMap= new HashMap<>();
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -78,14 +81,20 @@ public class KafkaConsumer {
         }
         //241023 예외처리
         long userId = Long.parseLong(String.valueOf((Integer)kafkaConsumerMap.get("userId")));
+        int count = (Integer)kafkaConsumerMap.get("successCnt");
+
         //kafka 예외 처리 로직 필요
         String date = (String)kafkaConsumerMap.get("date");
         String convertDate= statisticUtil.getCurrentWeekOfMonth(date);
 
+        StatisticTotalEntity totalEntity = statisticTotalRepository.findByUserId(userId)
+                .orElseThrow(()-> new CustomException ("NOT_FOUNDED_USER", "해당 유저는 없습니다."));
+
         StatisticDetailEntity detailEntity = statisticDetailRepository.findByUserIdAndDate(userId,convertDate)
                 .orElseThrow(()-> new CustomException ("NOT_FOUNDED_USER", "해당 유저는 없습니다."));
 
-        detailEntity.updateCreateCount("Add");
+        totalEntity.updateSuccessCnt(count);
+        detailEntity.updateSuccessCount(count);
 
     }
 
@@ -101,27 +110,35 @@ public class KafkaConsumer {
         } catch (JsonProcessingException e) {
             // 예외 처리 로직 필요
         }
-
+        //메시지가 없을 떄 예외 처리 필요 .KafkaException
         long userId = Long.parseLong(String.valueOf((Integer) kafkaConsumerMap.get("userId")));
         String date = (String) kafkaConsumerMap.get("date");
-        boolean isSuccess = (boolean) kafkaConsumerMap.get("isComplete");
+        int successCnt = (Integer)kafkaConsumerMap.get("successCnt");
+        int totalCnt = (Integer)kafkaConsumerMap.get("totalCnt");
+
+        String convertDate= statisticUtil.getCurrentWeekOfMonth(date);
+
+        String isSuccessStr = (String) kafkaConsumerMap.get("isComplete");
 
         StatisticTotalEntity statisticTotalEntity = statisticTotalRepository.findByUserId(userId).orElse(null);
-        StatisticDetailEntity statisticDetailEntity = statisticDetailRepository.findByUserIdAndDate(userId, date).orElse(null);
+        StatisticDetailEntity statisticDetailEntity = statisticDetailRepository.findByUserIdAndDate(userId, convertDate).orElse(null);
 
+        boolean isSuccess = isSuccessStr.equals("success");
+        log.info("삭제 메시지 isSuccess : " +isSuccess+" "+isSuccessStr);
         if (statisticTotalEntity != null && statisticDetailEntity != null) {
+            log.info("삭제 처리 시작");
             if (statisticTotalEntity.getCreateCount() > 0) {
-                statisticTotalEntity.updateCreateCnt("Delete");
+                statisticTotalEntity.updateCreateCnt(totalCnt);
             }
-            if (isSuccess || statisticTotalEntity.getSuccessCnt() > 0) {
-                statisticTotalEntity.updateSuccessCnt("Delete");
+            if (isSuccess && statisticTotalEntity.getSuccessCnt() > 0) {
+                statisticTotalEntity.updateSuccessCnt(successCnt);
             }
 
             if (statisticDetailEntity.getCreateCnt() > 0) {
-                statisticDetailEntity.updateCreateCount("Delete");
+                statisticDetailEntity.updateCreateCount(totalCnt);
             }
-            if (isSuccess || statisticDetailEntity.getSuccessCnt() > 0) {
-                statisticDetailEntity.updateSuccessCount("Delete");
+            if (isSuccess && statisticDetailEntity.getSuccessCnt() > 0) {
+                statisticDetailEntity.updateSuccessCount(successCnt);
             }
         } else {
             //별도의 처리 필요

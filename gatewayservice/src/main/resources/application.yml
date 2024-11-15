@@ -1,19 +1,14 @@
-server:
-  port: 6445
-
-eureka:
-  client:
-    fetch-registry: true
-    register-with-eureka: true
-    service-url:
-      defaultZone : http://localhost:8761/eureka
-  instance:
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-
 spring:
   application:
     name: gatewayservice
+  profiles:
+    active: dev
+  config:
+    import: optional:configserver:http://localhost:3333
   cloud:
+    bus:
+      refresh:
+        enabled: true
     gateway:
       default-filters:
         - name: GlobalFilter
@@ -71,5 +66,14 @@ spring:
           filters:
             - RewritePath=/todo-service/(?<segment>.*),/$\{segment}
 
-jwt:
-  secret: a2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbXRva2FyaW10b2thcmltdG9rYXJpbQ==
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+encrypt:
+  key-store:
+    location: file:///C:/keyStore/apiEncryptionKey.jks
+    alias: apiencryptionkey
+    password: cgs2760

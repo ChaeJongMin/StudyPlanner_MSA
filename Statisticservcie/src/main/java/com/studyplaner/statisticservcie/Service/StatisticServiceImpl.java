@@ -49,15 +49,15 @@ public class StatisticServiceImpl implements  StatisticService{
         String formattedDate = localDateTime.format(formatter);
 
         String convertDate = statisticUtil.getCurrentWeekOfMonth(formattedDate);
-
+        String[] splitDateStr = convertDate.split("-");
         StatisticDetailEntity statisticDetailEntity = statisticDetailRepository.findByUserIdAndDate(userId,convertDate).orElseThrow(
                 ()-> new CustomException("NOT_EXIST_USER","해당 유저는 존재하지 않습니다.")
         );
 
-        ThisTotalDto thisMonthTotalDto = statisticDetailRepository.findMonthlySummary(userId,convertDate);
+        ThisTotalDto thisMonthTotalDto = statisticDetailRepository.findMonthlySummary(userId,splitDateStr[0]+"-"+splitDateStr[1]);
 
         String weekOfMonth = convertDate.split("-")[3];
-        ThisTotalDto thisWeeklyTotalDto = statisticDetailRepository.findWeeklySummary(userId,convertDate,weekOfMonth);
+        ThisTotalDto thisWeeklyTotalDto = statisticDetailRepository.findWeeklySummary(userId,splitDateStr[0]+"-"+splitDateStr[1],weekOfMonth);
 
 
         return ResponseMultiDto.builder()

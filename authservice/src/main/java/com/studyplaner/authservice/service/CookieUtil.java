@@ -1,17 +1,22 @@
 package com.studyplaner.authservice.service;
 
+import com.studyplaner.authservice.config.MyProperties;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class CookieUtil {
+
+    private final MyProperties myProperties;
 
     public Cookie createCookie(String cookieName, String value){
         Cookie cookie = new Cookie(cookieName, value);
 
         cookie.setHttpOnly(true);
-        cookie.setMaxAge((int)TokenUtil.TOKEN_VALIDATION_SECOND);
+        cookie.setMaxAge((int)myProperties.getAccessTokenValidityInSeconds());
         cookie.setPath("/");
         return cookie;
     }

@@ -5,6 +5,8 @@ import com.studyplaner.todoservice.Error.NotFoundUserOrTodoException;
 import com.studyplaner.todoservice.Entity.TodoEntity;
 import com.studyplaner.todoservice.Entity.UserEntity;
 import com.studyplaner.todoservice.MessageQueue.KafkaProducer;
+import com.studyplaner.todoservice.MessageQueue.KafkaSendDeleteDto;
+import com.studyplaner.todoservice.MessageQueue.KafkaSendUpdateDto;
 import com.studyplaner.todoservice.MessageQueue.KakfaSendDto;
 import com.studyplaner.todoservice.Repository.TodoRepository;
 import com.studyplaner.todoservice.Repository.UserRepository;
@@ -12,10 +14,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @RequiredArgsConstructor
@@ -40,19 +43,20 @@ public class TodoServiceImpl implements TodoService{
     @Transactional
     @Override
     public ResponseCommon save(RequestSaveTodoDto requestSaveTodoDto) {
+        UserEntity userEntity = userRepository.findByUserId(requestSaveTodoDto.getUserId())
+                .orElseThrow(() -> new NotFoundUserOrTodoException("Not_Found_User", "해당 유저는 없습니다."));
 
-        //유저아이디로부터 LongId 추출
-        UserEntity userEntity =userRepository.findByUserId(requestSaveTodoDto.getUserId())
-                .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_User","해당 유저는 없습니다."));
-        //Todo 객체 생성
-        long id = userEntity.getId();
-        TodoEntity todoEntity = requestSaveTodoDto.toTodoEntity(id);
+        List<TodoEntity> todoEntities = requestSaveTodoDto.getContextList().stream()
+                .map(context -> requestSaveTodoDto.toTodoEntity(userEntity.getId(), context))
+                .toList();
 
-        //Todo 객체 저장
-        todoRepository.save(todoEntity);
+        todoRepository.saveAll(todoEntities);
 
-        //kafka를 통해 통계 서비스에 메시지 전달
-        kafkaProducer.sendTodoCreate(new KakfaSendDto(id,todoEntity.getCreatedAtString().split(":")[0]));
+        kafkaProducer.sendTodoCreate(KakfaSendDto.builder()
+                .count(todoEntities.size())
+                .date(requestSaveTodoDto.getDate().toString())
+                .userId(userEntity.getId())
+                .build());
 
         return ResponseCommon.builder()
                 .code(SAVE_CODE)
@@ -62,9 +66,20 @@ public class TodoServiceImpl implements TodoService{
 
     @Transactional
     @Override
-    public ResponseCommon delete(@RequestParam long id) {
+    public ResponseCommon delete(RequestDeleteTodo requestDeleteTodo) {
+        List<TodoEntity> todoEntities = todoRepository.findByUserIdAndDateAndIdIn(
+                requestDeleteTodo.getUserId(), requestDeleteTodo.getDate(), requestDeleteTodo.getTodoIdList());
 
-        todoRepository.deleteByUserId(id);
+        int successCnt = (int) todoEntities.stream().filter(TodoEntity::isComplete).count();
+
+        kafkaProducer.sendTodoDelete(KafkaSendDeleteDto.builder()
+                .successCnt(successCnt)
+                .totalCnt(todoEntities.size())
+                .date(todoEntities.isEmpty() ? "" : todoEntities.get(0).getDate().toString())
+                .userId(todoEntities.isEmpty() ? 0 : todoEntities.get(0).getUserId())
+                .build());
+
+        todoRepository.deleteAll(todoEntities);
 
         return ResponseCommon.builder()
                 .code(DELETE_CODE)
@@ -75,15 +90,34 @@ public class TodoServiceImpl implements TodoService{
     @Transactional
     @Override
     public ResponseCommon update(RequestUpdateTodoDto requestUpdateTodoDto) {
+        List<TodoEntity> todoEntities = todoRepository.findByUserIdAndDateAndIdIn(
+                requestUpdateTodoDto.getUserId(), requestUpdateTodoDto.getDate(),
+                requestUpdateTodoDto.getDetailList().stream().map(RequestUpdateDetailTodoDto::getTodoId).toList());
 
-        //유저아이디로부터 LongId 추출
-        UserEntity userEntity =userRepository.findByUserId(requestUpdateTodoDto.getUserId())
-                .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_User","해당 유저는 없습니다."));
+        AtomicInteger successCnt = new AtomicInteger();
 
-        TodoEntity todoEntity = todoRepository.findByUserId(userEntity.getId())
-                .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_Todo","해당 할일을 찾을 수 없습니다.."));
+        for (TodoEntity todoEntity : todoEntities) {
+            requestUpdateTodoDto.getDetailList().stream()
+                    .filter(dto -> dto.getTodoId() == todoEntity.getId())
+                    .findFirst()
+                    .ifPresent(detailDto -> {
+                        if (!"none".equals(detailDto.getContext())) {
+                            todoEntity.updateContext(detailDto.getContext());
+                        }
+                        if (todoEntity.isComplete() != detailDto.isComplete()) {
+                            if (detailDto.isComplete()) {
+                                successCnt.getAndIncrement();
+                            }
+                            todoEntity.updateIsComplete(detailDto.isComplete());
+                        }
+                    });
+        }
 
-        todoEntity.update(requestUpdateTodoDto.getContext());
+        kafkaProducer.sendTodoSuccess(KafkaSendUpdateDto.builder()
+                .date(requestUpdateTodoDto.getDate())
+                .userId(requestUpdateTodoDto.getUserId())
+                .successCnt(successCnt.get())
+                .build());
 
         return ResponseCommon.builder()
                 .code(UPDATE_CODE)
@@ -91,36 +125,21 @@ public class TodoServiceImpl implements TodoService{
                 .build();
     }
 
-    @Transactional
+
     @Override
-    public ResponseCommon completeTodo(RequestUpdateTodoDto requestUpdateTodoDto) {
-        UserEntity userEntity =userRepository.findByUserId(requestUpdateTodoDto.getUserId())
-                .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_User","해당 유저는 없습니다."));
+    public List<GetSimpleQueryDto> getListByDay(String userId, LocalDate date) {
+        UserEntity userEntity = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new NotFoundUserOrTodoException("Not_Found_User", "해당 유저는 없습니다."));
 
-        TodoEntity todoEntity = todoRepository.findByUserId(userEntity.getId())
-                .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_Todo","해당 할일을 찾을 수 없습니다.."));
-
-        todoEntity.complete();
-
-        //Kafka를 통해 통계서비스에 메시지 전달
-        kafkaProducer.sendTodoSuccess(new KakfaSendDto(todoEntity.getUserId(),todoEntity.getCreatedAtString().split(":")[0]));
-
-        return ResponseCommon.builder()
-                .code(COMPLETE_CODE)
-                .message(COMPLETE_MESSAGE)
-                .build();
+        return todoRepository.findByDay(date, userEntity.getId());
     }
 
     @Override
-    public List<GetSimpleQueryDto> getListByMonth(RequestGetMonth requestGetMonth) {
+    public List<GetSimpleQueryDto> getListByMonth(String userId, String month) {
+        UserEntity userEntity = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new NotFoundUserOrTodoException("Not_Found_User", "해당 유저는 없습니다."));
 
-
-        UserEntity userEntity =userRepository.findByUserId(requestGetMonth.getUserId())
-                .orElseThrow(()-> new NotFoundUserOrTodoException("Not_Found_User","해당 유저는 없습니다."));
-
-
-        return todoRepository.findByDate(requestGetMonth.getMonthFormat(),userEntity.getId());
+        return todoRepository.findByMonth(month, userEntity.getId());
     }
-
 
 }

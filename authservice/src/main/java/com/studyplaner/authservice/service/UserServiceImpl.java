@@ -6,6 +6,7 @@ import com.studyplaner.authservice.Dto.UserDto;
 import com.studyplaner.authservice.Entity.UserEntity;
 import com.studyplaner.authservice.Error.CustomTokenException;
 import com.studyplaner.authservice.Repository.UserRepository;
+import com.studyplaner.authservice.config.MyProperties;
 import jakarta.servlet.http.Cookie;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class UserServiceImpl implements UserService{
     private final TokenUtil tokenUtil;
     private final CookieUtil cookieUtil;
     private final RedisUtil redisUtil;
+    private final MyProperties myProperties;
 
     @Transactional
     @Override
@@ -58,14 +60,14 @@ public class UserServiceImpl implements UserService{
 
             //특정시간 이하면 리프레쉬 토큰을 다시 재발급
             if(refreshTokedValidationResult <= 3600){
-                String refreshToken = tokenUtil.doGenerateToken(userId,TokenUtil.REFRESH_TOKEN_VALIDATION_SECOND);
-                redisUtil.setDataExpire(userId, refreshToken,TokenUtil.REFRESH_TOKEN_VALIDATION_SECOND);
+                String refreshToken = tokenUtil.doGenerateToken(userId,myProperties.getRefreshTokenValidityInSeconds());
+                redisUtil.setDataExpire(userId, refreshToken,myProperties.getRefreshTokenValidityInSeconds());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        String accessToken = tokenUtil.doGenerateToken(userId,TokenUtil.TOKEN_VALIDATION_SECOND);
+        String accessToken = tokenUtil.doGenerateToken(userId,myProperties.getAccessTokenValidityInSeconds());
 
         return cookieUtil.createCookie(TokenUtil.ACCESS_TOKEN,accessToken);
     }

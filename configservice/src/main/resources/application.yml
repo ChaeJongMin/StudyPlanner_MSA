@@ -1,0 +1,30 @@
+server:
+  port: 3333
+
+spring:
+  application:
+    name: configserver
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/ChaeJongMin/study_planner_config_server
+          default-label: main
+          username: ChaeJongMin
+          password: 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
+        encrypt:
+          enabled: false
+  kafka:
+    bootstrap-servers: http://localhost:9092
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+encrypt:
+  key-store:
+    location: file:///C:/keyStore/publicKey.jks
+    password: cgs2760
+    alias: trustServer
+

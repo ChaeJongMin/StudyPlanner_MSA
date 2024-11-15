@@ -21,18 +21,22 @@ public class StatisticTotalEntity {
     private int successCnt;
 
     @Builder
-    public StatisticTotalEntity(long userId){
+    public StatisticTotalEntity(long userId,int createCount){
         this.userId = userId;
-        this.createCount = 1;
+        this.createCount = createCount;
         this.successCnt = 0;
     }
 
-    public void updateCreateCnt(String type){
-        this.createCount += (type.equals("Add") ? 1 : -1);
+    public void updateCreateCnt(int count){
+        this.createCount += count;
+        if(createCount<0)
+            this.createCount = 0;
     }
 
-    public void updateSuccessCnt(String type){
-        this.successCnt += (type.equals("Add") ? 1 : -1);
+    public void updateSuccessCnt(int count){
+        this.successCnt += count;
+        if(successCnt<0)
+            this.successCnt = 0;
     }
 
 }

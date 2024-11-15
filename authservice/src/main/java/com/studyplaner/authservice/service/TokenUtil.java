@@ -1,8 +1,10 @@
 package com.studyplaner.authservice.service;
 
 import com.studyplaner.authservice.Error.CustomTokenException;
+import com.studyplaner.authservice.config.MyProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -12,17 +14,10 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class TokenUtil {
-
-    final static public String ACCESS_TOKEN_NAME = "accessToken";
-    final static public String REFRESH_TOKEN_NAME = "refreshToken";
-
-    @Value("${jwt.secret}")
-    private String SECRET_KEY;
-
-    public final static long TOKEN_VALIDATION_SECOND = 1800L * 1000;
-    public final static long REFRESH_TOKEN_VALIDATION_SECOND = 1000L * 60 * 24 * 2;
+    private final MyProperties myProperties;
 
     public final static String ACCESS_TOKEN = "AccessToken";
 
@@ -32,8 +27,7 @@ public class TokenUtil {
     }
 
     public Claims extractAllClaims(String token) throws ExpiredJwtException {
-
-        Key key = getSignKey(SECRET_KEY);
+        Key key = getSignKey(myProperties.getSecret());
 
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -49,7 +43,7 @@ public class TokenUtil {
     public String doGenerateToken(String userId, long expireTime) {
         Claims claims = Jwts.claims();
         claims.put("userId", userId);
-        Key key = getSignKey(SECRET_KEY);
+        Key key = getSignKey(myProperties.getSecret());
 
         return Jwts.builder()
                 .addClaims(claims)
