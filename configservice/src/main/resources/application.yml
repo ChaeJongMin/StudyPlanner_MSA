@@ -10,8 +10,8 @@ spring:
         git:
           uri: https://github.com/ChaeJongMin/study_planner_config_server
           default-label: main
-          username: ChaeJongMin
-          password: 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
+          username: ""
+          password: ""
         encrypt:
           enabled: false
   kafka:
