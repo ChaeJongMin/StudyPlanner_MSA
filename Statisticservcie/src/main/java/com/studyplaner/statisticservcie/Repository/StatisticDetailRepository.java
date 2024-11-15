@@ -21,12 +21,12 @@ public interface StatisticDetailRepository extends JpaRepository<StatisticDetail
                                     @Param("yearMonth") String yearMonth);
 
     // 이번 주 합계 조회
-    @Query("SELECT new com.studyplaner.statisticservcie.Dto.Sql.ThisTotalDto(s.userId, SUM(s.createCnt), SUM(s.successCnt))" +
+    @Query("SELECT new com.studyplaner.statisticservcie.Dto.Sql.ThisTotalDto(s.userId, SUM(s.createCnt), SUM(s.successCnt)) " +
             "FROM StatisticDetailEntity s " +
-            "WHERE s.userId = :userId AND s.date LIKE CONCAT(:yearMonth, '-', :weekOfMonth) " +
+            "WHERE s.userId = :userId " +
+            "AND s.date LIKE CONCAT(:yearMonth, '-%', '-', :weekOfMonth) " +
             "GROUP BY s.userId")
     ThisTotalDto findWeeklySummary(@Param("userId") long userId,
-                                         @Param("yearMonth") String yearMonth,
-                                         @Param("weekOfMonth") String weekOfMonth);
-
+                                   @Param("yearMonth") String yearMonth,
+                                   @Param("weekOfMonth") String weekOfMonth);
 }

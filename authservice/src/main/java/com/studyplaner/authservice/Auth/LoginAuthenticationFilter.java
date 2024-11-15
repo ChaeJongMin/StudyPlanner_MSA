@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studyplaner.authservice.Dto.RequestLoginDto;
 import com.studyplaner.authservice.Entity.UserEntity;
 import com.studyplaner.authservice.Repository.UserRepository;
+import com.studyplaner.authservice.config.MyProperties;
 import com.studyplaner.authservice.service.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
@@ -33,6 +34,7 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
     private final RedisUtil redisUtil;
     private final ResponseTokenUtil responseTokenUtil;
     private final UserServiceImpl userServiceImpl;
+    private final MyProperties myProperties;
 
     String messageBody = null;
     @Override
@@ -61,14 +63,14 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
         String userId = user.getUsername();
         log.info("액세스 토큰을 생성하겠습니다.");
         //토큰 생성
-        String accessToken = tokenUtil.doGenerateToken(userId, TokenUtil.TOKEN_VALIDATION_SECOND);
+        String accessToken = tokenUtil.doGenerateToken(userId, myProperties.getAccessTokenValidityInSeconds());
 
         //리프레쉬 토큰 생성 및 업데이트
         long refreshTokenExpireFlag = redisUtil.getDataExpire(userId);
 
         log.info("리프레쉬ㅣ 토큰을 생성하겠습니다.");
-        String refreshToken = tokenUtil.doGenerateToken(userId,TokenUtil.REFRESH_TOKEN_VALIDATION_SECOND);
-        redisUtil.setDataExpire(userId, refreshToken,TokenUtil.REFRESH_TOKEN_VALIDATION_SECOND);
+        String refreshToken = tokenUtil.doGenerateToken(userId,myProperties.getRefreshTokenValidityInSeconds());
+        redisUtil.setDataExpire(userId, refreshToken,myProperties.getRefreshTokenValidityInSeconds());
 
         //쿠키 설정
         Cookie cookie = cookieUtil.createCookie(TokenUtil.ACCESS_TOKEN ,accessToken);

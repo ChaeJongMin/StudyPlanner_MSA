@@ -32,12 +32,13 @@ public class SecurityConfig {
     private final ResponseTokenUtil responseTokenUtil;
     private final UserServiceImpl userServiceImpl;
     private final UserDetailsService userDetailsService;
-    private final UserRepository userRepository;
+    private final MyProperties myProperties;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint customAuthenticationEntryPoint,AuthenticationManager authenticationManager) throws Exception {
 
         LoginAuthenticationFilter loginAuthenticationFilter =
-                new LoginAuthenticationFilter(tokenUtil, cookieUtil,redisUtil,responseTokenUtil,userServiceImpl);
+                new LoginAuthenticationFilter(tokenUtil, cookieUtil,redisUtil,responseTokenUtil,userServiceImpl,myProperties);
         loginAuthenticationFilter.setFilterProcessesUrl("/login");
         loginAuthenticationFilter.setAuthenticationManager(authenticationManager);
 

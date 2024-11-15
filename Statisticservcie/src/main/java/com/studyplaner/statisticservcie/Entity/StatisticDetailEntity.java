@@ -20,18 +20,22 @@ public class StatisticDetailEntity { //타 서비스의 Todo 엔티티 데이터
 
 
     @Builder
-    public  StatisticDetailEntity(long userId, String date){
+    public  StatisticDetailEntity(long userId, String date, int createCnt){
         this.userId = userId;
         this.date = date;
-        this.createCnt = 1;
+        this.createCnt = createCnt;
         this.successCnt = 0;
     }
 
-    public void updateCreateCount(String type){
-        this.createCnt += (type.equals("Add") ? 1 : -1);
+    public void updateCreateCount(int count){
+        this.createCnt += count;
+        if(createCnt<0)
+            this.createCnt = 0;
     }
 
-    public void updateSuccessCount(String type){
-        this.successCnt += (type.equals("Add") ? 1 : -1);
+    public void updateSuccessCount(int count){
+        this.successCnt += count;
+        if(successCnt<0)
+            this.successCnt = 0;
     }
 }

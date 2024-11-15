@@ -25,21 +25,33 @@ public class KafkaProducer {
         try{
             jsonToMessage = objectMapper.writeValueAsString(kakfaSendDto);
         } catch (JsonProcessingException ex){
-            ex.printStackTrace();
+            ex.fillInStackTrace();
         }
         String topic="todo-statistic-create";
         kafkaTemplate.send(topic,jsonToMessage);
     }
 
-    public void sendTodoSuccess(KakfaSendDto kakfaSendDto){
+    public void sendTodoSuccess(KafkaSendUpdateDto kafkaSendUpdateDto){
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonToMessage = "";
         try{
-            jsonToMessage = objectMapper.writeValueAsString(kakfaSendDto);
+            jsonToMessage = objectMapper.writeValueAsString(kafkaSendUpdateDto);
         } catch (JsonProcessingException ex){
-            ex.printStackTrace();
+            ex.fillInStackTrace();
         }
         String topic = "todo-statistic-success";
+        kafkaTemplate.send(topic,jsonToMessage);
+    }
+
+    public void sendTodoDelete(KafkaSendDeleteDto kafkaSendDeleteDto){
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonToMessage = "";
+        try{
+            jsonToMessage = objectMapper.writeValueAsString(kafkaSendDeleteDto);
+        } catch (JsonProcessingException ex){
+            ex.fillInStackTrace();
+        }
+        String topic = "todo-statistic-delete";
         kafkaTemplate.send(topic,jsonToMessage);
     }
 
